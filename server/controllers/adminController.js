@@ -14,17 +14,17 @@ export const loginAdmin = async (req, res) => {
       });
     }
 
-    // Find admin by email
-    const admin = await Admin.findOne({ email });
+    const admin = await Admin.findOne({
+      email: email.toLowerCase().trim(),
+    });
 
     if (!admin) {
       return res.status(401).json({
         success: false,
-        message: "Invalid credentials",
+        message: "Admin not found",
       });
     }
 
-    // Compare password
     const isMatch = await bcrypt.compare(password, admin.password);
 
     if (!isMatch) {
@@ -34,14 +34,15 @@ export const loginAdmin = async (req, res) => {
       });
     }
 
-    // Generate JWT
     const token = jwt.sign(
       { id: admin._id },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      {
+        expiresIn: "7d",
+      }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Login successful",
       token,
@@ -52,45 +53,31 @@ export const loginAdmin = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login Error:", error);
+    console.error(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: error.message,
     });
   }
 };
 
-// Reset Admin Password
+// DEBUG ROUTE
 export const resetAdminPassword = async (req, res) => {
   try {
-    const hashedPassword = await bcrypt.hash("admin123", 10);
-
-    const admin = await Admin.findOneAndUpdate(
-      { email: "admin@gmail.com" },
-      { password: hashedPassword },
-      { new: true }
-    );
-
-    if (!admin) {
-      return res.status(404).json({
-        success: false,
-        message: "Admin not found",
-      });
-    }
+    const admins = await Admin.find();
 
     res.status(200).json({
       success: true,
-      message: "Password reset successfully",
-      email: "admin@gmail.com",
-      password: "admin123",
+      count: admins.length,
+      admins,
     });
   } catch (error) {
     console.error(error);
 
     res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: error.message,
     });
   }
 };
