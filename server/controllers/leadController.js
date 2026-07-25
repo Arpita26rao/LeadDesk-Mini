@@ -5,6 +5,7 @@ export const createLead = async (req, res) => {
   try {
     const { name, email, budget, message } = req.body;
 
+    // Validation
     if (!name || !email || !budget || !message) {
       return res.status(400).json({
         success: false,
@@ -32,14 +33,64 @@ export const createLead = async (req, res) => {
   }
 };
 
-// Get All Leads
+// Get All Leads with Search
 export const getLeads = async (req, res) => {
   try {
-    const leads = await Lead.find().sort({ createdAt: -1 });
+    const keyword = req.query.search
+      ? {
+          $or: [
+            {
+              name: {
+                $regex: req.query.search,
+                $options: "i",
+              },
+            },
+            {
+              email: {
+                $regex: req.query.search,
+                $options: "i",
+              },
+            },
+          ],
+        }
+      : {};
+
+    const leads = await Lead.find(keyword).sort({
+      createdAt: -1,
+    });
 
     res.status(200).json({
       success: true,
       leads,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+// Update Lead Status
+export const updateLeadStatus = async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id);
+
+    if (!lead) {
+      return res.status(404).json({
+        success: false,
+        message: "Lead not found",
+      });
+    }
+
+    lead.status =
+      lead.status === "New" ? "Contacted" : "New";
+
+    await lead.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Status updated successfully",
+      lead,
     });
   } catch (error) {
     res.status(500).json({
