@@ -21,11 +21,11 @@ function LeadForm() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/leads",
+        "https://leaddesk-mini-production-3c69.up.railway.app/api/leads",
         formData
       );
 
-      alert(res.data.message);
+      alert(res.data.message || "Lead submitted successfully!");
 
       setFormData({
         name: "",
@@ -34,13 +34,11 @@ function LeadForm() {
         message: "",
       });
     } catch (error) {
-      console.log("Error:", error);
-      console.log("Response:", error.response);
+      console.error("Error:", error);
 
       alert(
         error.response?.data?.message ||
-        error.message ||
-        "Something went wrong"
+          "Something went wrong. Please try again."
       );
     }
   };

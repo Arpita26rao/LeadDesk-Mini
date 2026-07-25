@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+const API = "https://leaddesk-mini-production-3c69.up.railway.app/api";
+
 function Admin() {
   const [leads, setLeads] = useState([]);
   const [search, setSearch] = useState("");
+
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetchLeads();
@@ -12,22 +16,35 @@ function Admin() {
   const fetchLeads = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/leads?search=${search}`
+        `${API}/leads?search=${search}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
-      console.log("API Response:", response.data);
-      setLeads(response.data.leads);
+      setLeads(response.data.leads || []);
     } catch (error) {
-      console.log("Error:", error);
+      console.log("Error:", error.response?.data || error.message);
     }
   };
 
   const updateStatus = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/leads/${id}`);
+      await axios.put(
+        `${API}/leads/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       fetchLeads();
     } catch (error) {
-      console.log("Error:", error);
+      console.log("Error:", error.response?.data || error.message);
     }
   };
 
@@ -35,7 +52,6 @@ function Admin() {
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
-      {/* Search Box */}
       <div className="mb-4">
         <input
           type="text"

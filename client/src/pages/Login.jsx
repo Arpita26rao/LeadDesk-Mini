@@ -19,7 +19,7 @@ function Login() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/admin/login",
+        "https://leaddesk-mini-production-3c69.up.railway.app/api/admin/login",
         form
       );
 
