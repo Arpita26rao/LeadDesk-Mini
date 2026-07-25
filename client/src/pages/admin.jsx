@@ -15,14 +15,11 @@ function Admin() {
 
   const fetchLeads = async () => {
     try {
-      const response = await axios.get(
-        `${API}/leads?search=${search}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get(`${API}/leads?search=${search}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       setLeads(response.data.leads || []);
     } catch (error) {
@@ -48,55 +45,92 @@ function Admin() {
     }
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "New":
+        return "bg-blue-500";
+      case "Contacted":
+        return "bg-yellow-500";
+      case "Closed":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6 text-center">
+          Admin Dashboard
+        </h1>
 
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full border rounded-lg px-4 py-2"
-        />
+        <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div className="overflow-x-auto shadow-lg rounded-lg">
+          <table className="w-full bg-white">
+            <thead className="bg-gray-800 text-white">
+              <tr>
+                <th className="p-3">Name</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Budget</th>
+                <th className="p-3">Message</th>
+                <th className="p-3">Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {leads.length > 0 ? (
+                leads.map((lead) => (
+                  <tr
+                    key={lead._id}
+                    className="border-b hover:bg-gray-50 transition"
+                  >
+                    <td className="p-3">{lead.name}</td>
+                    <td className="p-3">{lead.email}</td>
+                    <td className="p-3">{lead.budget}</td>
+                    <td className="p-3">{lead.message}</td>
+
+                    <td className="p-3">
+                      <button
+                        onClick={() => updateStatus(lead._id)}
+                        className={`px-4 py-2 rounded-lg text-white font-medium transition ${getStatusColor(
+                          lead.status
+                        )}`}
+                      >
+                        {lead.status}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="text-center p-6 text-gray-500"
+                  >
+                    No leads found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="text-center text-gray-500 mt-4">
+          Click on the status button to change:
+          <br />
+          <strong>New → Contacted → Closed → New</strong>
+        </p>
       </div>
-
-      <table className="w-full border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-3">Name</th>
-            <th className="border p-3">Email</th>
-            <th className="border p-3">Budget</th>
-            <th className="border p-3">Message</th>
-            <th className="border p-3">Status</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {leads.map((lead) => (
-            <tr key={lead._id}>
-              <td className="border p-3">{lead.name}</td>
-              <td className="border p-3">{lead.email}</td>
-              <td className="border p-3">{lead.budget}</td>
-              <td className="border p-3">{lead.message}</td>
-
-              <td className="border p-3">
-                <button
-                  onClick={() => updateStatus(lead._id)}
-                  className={`px-3 py-1 rounded text-white ${
-                    lead.status === "New"
-                      ? "bg-blue-500"
-                      : "bg-green-500"
-                  }`}
-                >
-                  {lead.status}
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
