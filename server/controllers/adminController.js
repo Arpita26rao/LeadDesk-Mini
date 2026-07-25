@@ -1,27 +1,84 @@
-import express from "express";
-import bcrypt from "bcryptjs";
 import Admin from "../models/Admin.js";
-import {
-  loginAdmin,
-  resetAdminPassword,
-} from "../controllers/adminController.js";
-
-const router = express.Router();
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 // Admin Login
-router.post("/login", loginAdmin);
-
-// Reset Admin Password
-router.get("/reset-password", resetAdminPassword);
-
-// TEMPORARY ROUTE - Create Admin (Delete after use)
-router.get("/create-admin", async (req, res) => {
+export const loginAdmin = async (req, res) => {
   try {
-    const existingAdmin = await Admin.findOne({
+    const { email, password } = req.body;
+
+    const admin = await Admin.findOne({ email });
+
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const token = jwt.sign(
+      { id: admin._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      token,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Reset Password
+export const resetAdminPassword = async (req, res) => {
+  try {
+    const admin = await Admin.findOne({ email: "admin@gmail.com" });
+
+    if (!admin) {
+      return res.json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+
+    admin.password = await bcrypt.hash("admin123", 10);
+    await admin.save();
+
+    res.json({
+      success: true,
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Create Admin
+export const createAdmin = async (req, res) => {
+  try {
+    const existing = await Admin.findOne({
       email: "admin@gmail.com",
     });
 
-    if (existingAdmin) {
+    if (existing) {
       return res.json({
         success: true,
         message: "Admin already exists",
@@ -30,7 +87,7 @@ router.get("/create-admin", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash("admin123", 10);
 
-    const admin = await Admin.create({
+    await Admin.create({
       name: "Admin",
       email: "admin@gmail.com",
       password: hashedPassword,
@@ -39,7 +96,6 @@ router.get("/create-admin", async (req, res) => {
     res.json({
       success: true,
       message: "Admin created successfully",
-      admin,
     });
   } catch (error) {
     res.status(500).json({
@@ -47,6 +103,4 @@ router.get("/create-admin", async (req, res) => {
       message: error.message,
     });
   }
-});
-
-export default router;
+};
