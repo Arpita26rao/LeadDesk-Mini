@@ -13,6 +13,7 @@ const leadSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
+      trim: true,
     },
 
     budget: {
@@ -23,11 +24,12 @@ const leadSchema = new mongoose.Schema(
     message: {
       type: String,
       required: true,
+      trim: true,
     },
 
     status: {
       type: String,
-      enum: ["New", "Contacted"],
+      enum: ["New", "Contacted", "Closed"],
       default: "New",
     },
   },
