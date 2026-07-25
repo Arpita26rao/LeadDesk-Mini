@@ -2,11 +2,11 @@ import Admin from "../models/Admin.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+// Admin Login
 export const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -14,11 +14,8 @@ export const loginAdmin = async (req, res) => {
       });
     }
 
-    const admin = await Admin.findOne({});
-console.log(admin);
-    
-
-    console.log("Admin:", admin);
+    // Find admin by email
+    const admin = await Admin.findOne({ email });
 
     if (!admin) {
       return res.status(401).json({
@@ -29,8 +26,6 @@ console.log(admin);
 
     // Compare password
     const isMatch = await bcrypt.compare(password, admin.password);
-
-    console.log("Password Match:", isMatch);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -46,7 +41,7 @@ console.log(admin);
       { expiresIn: "7d" }
     );
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Login successful",
       token,
@@ -59,9 +54,43 @@ console.log(admin);
   } catch (error) {
     console.error("Login Error:", error);
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Server Error",
+    });
+  }
+};
+
+// Reset Admin Password
+export const resetAdminPassword = async (req, res) => {
+  try {
+    const hashedPassword = await bcrypt.hash("admin123", 10);
+
+    const admin = await Admin.findOneAndUpdate(
+      { email: "admin@gmail.com" },
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+      email: "admin@gmail.com",
+      password: "admin123",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
     });
   }
 };
