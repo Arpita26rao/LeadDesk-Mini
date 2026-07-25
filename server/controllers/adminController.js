@@ -16,7 +16,7 @@ export const loginAdmin = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const isMatch = await admin.matchPassword(password);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -56,7 +56,8 @@ export const resetAdminPassword = async (req, res) => {
       });
     }
 
-    admin.password = await bcrypt.hash("admin123", 10);
+    // Plain password - model pre("save") will hash it
+    admin.password = "admin123";
     await admin.save();
 
     res.json({
@@ -85,12 +86,11 @@ export const createAdmin = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash("admin123", 10);
-
+    // Plain password - model pre("save") will hash it
     await Admin.create({
       name: "Admin",
       email: "admin@gmail.com",
-      password: hashedPassword,
+      password: "admin123",
     });
 
     res.json({
