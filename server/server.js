@@ -11,30 +11,8 @@ connectDB();
 
 const app = express();
 
-// CORS
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://lead-desk-mini-pi.vercel.app",
-  "https://lead-desk-mini-mnt6ab3x9-arpita-raos-projects.vercel.app",
-  "https://lead-desk-mini-git-main-arpita-raos-projects.vercel.app",
-];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow Postman/server-to-server requests
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
-
+// Middleware
+app.use(cors());
 app.use(express.json());
 
 // Routes
