@@ -3,26 +3,48 @@ import axios from "axios";
 
 function Admin() {
   const [leads, setLeads] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchLeads();
-  }, []);
+  }, [search]);
 
-const fetchLeads = async () => {
-  try {
-    const res = await axios.get("http://localhost:5000/api/leads");
+  const fetchLeads = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/leads?search=${search}`
+      );
 
-    console.log("API Response:", res.data);
+      console.log("API Response:", response.data);
+      setLeads(response.data.leads);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  };
 
-    setLeads(res.data.leads);
-  } catch (error) {
-    console.log("Error:", error);
-  }
-};
+  const updateStatus = async (id) => {
+    try {
+      await axios.put(`http://localhost:5000/api/leads/${id}`);
+      fetchLeads();
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  };
 
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+
+      {/* Search Box */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full border rounded-lg px-4 py-2"
+        />
+      </div>
 
       <table className="w-full border-collapse border border-gray-300">
         <thead>
@@ -42,7 +64,19 @@ const fetchLeads = async () => {
               <td className="border p-3">{lead.email}</td>
               <td className="border p-3">{lead.budget}</td>
               <td className="border p-3">{lead.message}</td>
-              <td className="border p-3">{lead.status}</td>
+
+              <td className="border p-3">
+                <button
+                  onClick={() => updateStatus(lead._id)}
+                  className={`px-3 py-1 rounded text-white ${
+                    lead.status === "New"
+                      ? "bg-blue-500"
+                      : "bg-green-500"
+                  }`}
+                >
+                  {lead.status}
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
