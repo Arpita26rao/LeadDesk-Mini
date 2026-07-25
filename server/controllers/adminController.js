@@ -1,83 +1,52 @@
-import Admin from "../models/Admin.js";
+import express from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import Admin from "../models/Admin.js";
+import {
+  loginAdmin,
+  resetAdminPassword,
+} from "../controllers/adminController.js";
+
+const router = express.Router();
 
 // Admin Login
-export const loginAdmin = async (req, res) => {
+router.post("/login", loginAdmin);
+
+// Reset Admin Password
+router.get("/reset-password", resetAdminPassword);
+
+// TEMPORARY ROUTE - Create Admin (Delete after use)
+router.get("/create-admin", async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-      });
-    }
-
-    const admin = await Admin.findOne({
-      email: email.toLowerCase().trim(),
+    const existingAdmin = await Admin.findOne({
+      email: "admin@gmail.com",
     });
 
-    if (!admin) {
-      return res.status(401).json({
-        success: false,
-        message: "Admin not found",
+    if (existingAdmin) {
+      return res.json({
+        success: true,
+        message: "Admin already exists",
       });
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const hashedPassword = await bcrypt.hash("admin123", 10);
 
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
-    }
+    const admin = await Admin.create({
+      name: "Admin",
+      email: "admin@gmail.com",
+      password: hashedPassword,
+    });
 
-    const token = jwt.sign(
-      { id: admin._id },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
-
-    return res.status(200).json({
+    res.json({
       success: true,
-      message: "Login successful",
-      token,
-      admin: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-      },
+      message: "Admin created successfully",
+      admin,
     });
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// DEBUG ROUTE
-export const resetAdminPassword = async (req, res) => {
-  try {
-    const admins = await Admin.find();
-
-    res.status(200).json({
-      success: true,
-      count: admins.length,
-      admins,
-    });
-  } catch (error) {
-    console.error(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
-};
+});
+
+export default router;
